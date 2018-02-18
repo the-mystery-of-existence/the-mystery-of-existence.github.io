@@ -1,2 +1,2 @@
-var date=new Date();
-document.write(date.toLocaleString());
+//var date=new Date();
+//document.write(date.toLocaleString());

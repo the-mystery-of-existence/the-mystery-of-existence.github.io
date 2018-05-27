@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>vue-learning</title>
+	<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/axios@0.12.0/dist/axios.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/lodash@4.13.1/lodash.min.js"></script>
+	<style type="text/css">
+		.dm{
+			color:green;
+			font-size: 30px;
+		}
+	</style>
+</head>
+<body>
+	<div id="app">
+		<p v-if="seen" v-bind:style="styleObj">{{message}}</p>
+		<span v-bind:title="message" v-html="tips"></span>
+		<ol>
+			<li v-for="listItem in list" v-if="listItem.text!=='aaa'">
+				{{listItem.text}}
+			</li>
+		</ol>
+		<input type="text" name="text" v-model.lazy="message" @keyup.enter="addNew"/>
+		<button @click="reverseMessage">{{btText}}</button>
+		<button :disabled="isDisabled">{{btText.split("").reverse().join("-")}}</button>
+		<ul>
+		<list v-for="(listItem,index) in groceryList" 
+		v-bind:item="listItem"
+		v-bind:key="listItem.id"
+		@remove="groceryList.splice(index,1)"></list>
+		</ul>
+		<p v-bind:class="classObj">{{divideMessage}}</p>
+		<hr>
+		<input type="text" name="text" v-model="question" />
+		<p>{{answer}}</p>
+	</div>
+	<script type="text/javascript">
+		Vue.component('list',{
+			props:['item'],
+			template:'\
+			<li>\
+			<a href="https://www.taobao.com">{{item.name}}</a>\
+			<button @click="$emit(\'remove\')">X</button>\
+			</li>'
+		});
+		const app=new Vue({
+			el:'#app',
+			data:{
+				classObj:{
+					dm:true,
+				},
+				styleObj:{
+					color:'red',
+					fontSize:'30px',
+				},
+				question:'请输入你的问题',
+				answer:'问题输入完毕就会给出答案',
+				isDisabled:true,
+				tips:'<h2>查看提示信息</h2>',
+				message:'hello world!',
+				seen:true,
+				btText:'逆转消息',
+				list:[
+					{text:'aaa'},
+					{text:'bbb'},
+					{text:'ccc'},
+				],
+				groceryList:[
+					{id:0,name:'蔬菜'},
+					{id:1,name:'水果'},
+					{id:2,name:'Others'},
+				],
+			},
+			created:function(){
+				this.deboncedGetAnswer=_.debounce(this.getAnswer,500);
+			},
+			methods:{
+				addNew:function(){
+					let len=this.groceryList.length;
+					this.groceryList.push({id:len,name:this.message});
+				},
+				reverseMessage:function(){this.btText=this.btText.split("").reverse().join("");},
+				getAnswer:function(){
+					if(this.question.indexOf('?')===-1&&!this.question.includes('？')){
+						this.answer='问题应当以问号结束';
+						return;
+					}
+					this.answer='Thinking...';
+					var vm = this;
+			      	axios.get('https://yesno.wtf/api')
+			        .then(function (response) {
+			          vm.answer = _.capitalize(response.data.answer)
+			        })
+			        .catch(function (error) {
+			          vm.answer = 'Error! Could not reach the API. ' + error
+			        })
+				},
+			},
+			watch:{
+				message:function(newVal,oldVal){
+    				app.$data.btText=newVal;
+				},
+				question:function(newVal,oldVal){
+					this.answer='等你敲完';
+					this.deboncedGetAnswer();
+				},
+			},
+			computed:{
+				divideMessage:{
+					get:function(){
+						return this.message.split("").join(" ");
+					},
+					set:function(newVal){
+						this.message=newVal.split(" ").join("");
+					},
+				},
+			},
+		});
+	</script>
+</body>
+</html>
